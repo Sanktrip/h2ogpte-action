@@ -17,8 +17,8 @@ import * as h2ogpte from "./core/services/h2ogpte/h2ogpte";
 import {
   copyCollection,
   isValidCollection,
-  parseUserH2ogpteConfig,
   updateGuardRailsSettings,
+  createUsageReport,
 } from "./core/services/h2ogpte/utils";
 import {
   applyChatSettingsWithUserConfigAndTools,
@@ -27,8 +27,10 @@ import {
   createGithubMcpAndSecret,
   getGithubToken,
   getToolsToRestrictCollectionTo,
+  parseUserH2ogpteConfig,
 } from "./core/utils";
 
+import { getGuidelinesFile } from "./core/response/utils/guidelines";
 /**
  * The main function for the action.
  *
@@ -109,6 +111,17 @@ export async function run(): Promise<void> {
     const chatSessionUrl = h2ogpte.getChatSessionUrl(chatSessionId.id);
     core.debug(`This chat session url is ${chatSessionUrl}`);
 
+    // Retrieved agent doc's contents
+    const agentDocsPath = process.env.AGENT_DOCS;
+    let agentDocsContent;
+    if (agentDocsPath) {
+      agentDocsContent = await getGuidelinesFile(
+        octokits.rest,
+        agentDocsPath,
+        context,
+      );
+    }
+
     if (isPRIssueEvent(context) && instruction?.includes("@h2ogpte")) {
       // Fetch Github comment data (only for PR/Issue events)
       const githubData = await fetchGitHubData({
@@ -143,6 +156,7 @@ export async function run(): Promise<void> {
       const instructionPrompt = createAgentInstructionPrompt(
         context,
         githubData,
+        agentDocsContent,
       );
 
       // Query h2oGPTe for Agent completion
@@ -171,11 +185,13 @@ export async function run(): Promise<void> {
         context,
         h2ogpteComment.data.id,
       );
+      await createUsageReport(chatSessionId.id);
     } else {
       // Create the agent instruction prompt
       const instructionPrompt = createAgentInstructionPrompt(
         context,
         undefined,
+        agentDocsContent,
       );
 
       // Query h2oGPTe for Agent completion
@@ -187,6 +203,7 @@ export async function run(): Promise<void> {
       core.debug(
         `Chat completion:\n ${JSON.stringify(chatCompletion, null, 2)}`,
       );
+      await createUsageReport(chatSessionId.id);
     }
   } catch (error) {
     // Fail the workflow run if an error occurs
