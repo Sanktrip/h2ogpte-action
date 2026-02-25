@@ -118,9 +118,9 @@ export function buildEventsText(
       const eventId = event.id ?? "issue_body";
       const tagName = `${sanitizedTimestamp}_${eventId}`;
       const content = `- ${event.type}: ${event.body} (${event.createdAt})`;
-      return `  <${tagName}>\n  ${content}\n  </${tagName}>`;
+      return `  <${tagName}>\n  ${content} \n</${tagName}>`;
     })
     .join("\n");
 
-  return `<events>\n${eventLines}\n</events>`;
+  return `<events>\n ${eventLines} \n</events>`;
 }

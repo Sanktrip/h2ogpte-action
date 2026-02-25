@@ -114,7 +114,8 @@ function getMcpInstructions(): string {
     - Do NOT attempt to create your own MCP client in Python or any other language.
     - Do NOT make direct API calls or use Python/shell scripts to interact with GitHub (except for using claude_tool_runner to execute MCP tools).
     - If the MCP server encounters a fatal error, exit with an appropriate error message. For errors related to incorrect parameters or tool usage, handle them gracefully and provide helpful feedback.
-    </github_mcp_instructions>
+
+    \n</github_mcp_instructions>
   `;
 }
 
@@ -397,7 +398,7 @@ function getInstructionPromptForCollections(): string {
 
 function getFileEmbeddingPrompt(): string {
   const prompt = dedent`
-<constraints>
+\n<constraints>
 
 OUTPUT FORMAT RESTRICTION — STRICT
 
